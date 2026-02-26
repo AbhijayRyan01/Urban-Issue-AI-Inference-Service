@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { Bar } from "react-chartjs-2";
 import {
@@ -21,7 +21,6 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 function AdminDashboard() {
   const [issues, setIssues] = useState([]);
   const [analytics, setAnalytics] = useState(null);
-  const [monthlyData, setMonthlyData] = useState([]);
   const [loadingIssues, setLoadingIssues] = useState(true);
   const token = localStorage.getItem("token");
 
@@ -51,18 +50,6 @@ function AdminDashboard() {
     }
   };
 
-  const fetchMonthly = async () => {
-    try {
-      const res = await axios.get(
-        "http://localhost:5000/api/analytics/monthly",
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
-      setMonthlyData(res.data);
-    } catch (err) {
-      console.error("Monthly fetch error", err);
-    }
-  };
-
   const updateIssueStatus = async (id, newStatus) => {
     try {
       await axios.patch(
@@ -74,10 +61,9 @@ function AdminDashboard() {
           },
         }
       );
-      // Refresh issues, summary cards and monthly chart together
+      // Refresh issues and summary cards; chart is derived from issues
       fetchIssues();
       fetchAnalytics();
-      fetchMonthly();
     } catch (err) {
       console.error("Failed to update status", err);
     }
@@ -86,8 +72,45 @@ function AdminDashboard() {
   useEffect(() => {
     fetchIssues();
     fetchAnalytics();
-    fetchMonthly();
   }, []);
+
+  const monthlySummary = useMemo(() => {
+    const map = new Map();
+
+    issues.forEach((issue) => {
+      if (!issue.createdAt) return;
+
+      const date = new Date(issue.createdAt);
+      if (isNaN(date)) return;
+
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; // 1-12
+      const key = `${year}-${month}`;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          _id: { year, month },
+          reportedCount: 0,
+          inProgressCount: 0,
+          resolvedCount: 0,
+        });
+      }
+
+      const bucket = map.get(key);
+      bucket.reportedCount += 1;
+
+      if (issue.status === "In Progress") {
+        bucket.inProgressCount += 1;
+      } else if (issue.status === "Resolved") {
+        bucket.resolvedCount += 1;
+      }
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) =>
+        a._id.year - b._id.year || a._id.month - b._id.month
+    );
+  }, [issues]);
 
   const cardStyle = {
     flex: 1,
@@ -99,25 +122,27 @@ function AdminDashboard() {
   };
 
   const chartData = {
-  labels: monthlyData.map(item => `${item._id.month}/${item._id.year}`),
-  datasets: [
-    {
-      label: "Total Issues",
-      data: monthlyData.map(item => item.count),
-      backgroundColor: "rgb(255, 242, 0)",
-    },
-    {
-      label: "Total Issues",
-      data: monthlyData.map(item => item.count),
-      backgroundColor: "rgba(17, 255, 0, 0.89)",
-    },
-    {
-      label: "Total Issues",
-      data: monthlyData.map(item => item.count),
-      backgroundColor: "rgba(54, 162, 235, 0.6)",
-    },
-  ],
-};
+    labels: monthlySummary.map(
+      (item) => `${item._id.month}/${item._id.year}`
+    ),
+    datasets: [
+      {
+        label: "Issues Reported",
+        data: monthlySummary.map((item) => item.reportedCount),
+        backgroundColor: "rgba(255, 242, 0, 0.62)",
+      },
+      {
+        label: "In Progress",
+        data: monthlySummary.map((item) => item.inProgressCount),
+        backgroundColor: "rgba(17, 255, 0, 0.89)",
+      },
+      {
+        label: "Resolved",
+        data: monthlySummary.map((item) => item.resolvedCount),
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
+      },
+    ],
+  };
 
   return (
     <div className="dashboard-container">

@@ -14,7 +14,7 @@ const Prediction = require("../models/Prediction");
 // ================================
 const upload = multer({
   dest: "uploads/",
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 // ================================
@@ -118,9 +118,6 @@ router.patch("/issue-status/:id", auth, async (req, res) => {
   res.json(issue);
 });
 
-// ================================
-// PATCH /api/issues/issue-status/:id (Admin Only)
-// ================================
 // ================================
 // PATCH /api/issues/issue-status/:id (Admin Only)
 // ================================
