@@ -154,40 +154,37 @@ function AdminDashboard() {
   return (
     <div className="dashboard-container">
 
-      {/* ── Top Bar with Logout ── */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: "8px",
-      }}>
+      {/* ── Top Bar with Logout (styled like IssueForm header) ── */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "8px",
+        }}
+      >
         <div>
-          <h2 className="dashboard-title" style={{ margin: 0 }}>Admin Dashboard</h2>
-          <p className="welcome-message" style={{ margin: "4px 0 0" }}>Welcome, Admin 👋</p>
+          <h2 className="dashboard-title" style={{ margin: 0 }}>
+            Admin Dashboard
+          </h2>
+          <p className="welcome-message" style={{ margin: "4px 0 0" }}>
+            Welcome, Admin 👋
+          </p>
         </div>
 
+        {/* Logout button – mimic IssueForm.js styles.logoutBtn */}
         <button
           onClick={handleLogout}
           style={{
-            background: "linear-gradient(135deg, #ec5b13, #ff7a00)",
+            background: "none",
             border: "none",
-            color: "#fff",
+            color: "#64748b",
             fontSize: 14,
-            fontWeight: 600,
+            fontWeight: 500,
             cursor: "pointer",
-            padding: "8px 18px",
-            borderRadius: "8px",
-            boxShadow: "0 4px 10px rgba(236, 91, 19, 0.3)",
-            transition: "all 0.2s ease-in-out",
+            padding: 0,
           }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = "translateY(-2px)";
-            e.target.style.boxShadow = "0 6px 14px rgba(236, 91, 19, 0.4)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0)";
-            e.target.style.boxShadow = "0 4px 10px rgba(236, 91, 19, 0.3)";
-          }}
+          className="nav-link"
         >
           Logout
         </button>
