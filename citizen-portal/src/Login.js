@@ -183,7 +183,7 @@ function Login() {
           <div className="logo-icon">
             <img src={symbol} alt="BiswaBangla Logo" className="logo-img" />
           </div>
-          <h1>Smart Calcutta Municipal Corporation</h1>
+          <h1>Calcutta Reimagined: A Smart Civic Revolution</h1>
           <p>An Engineer’s Quiet Resolve to Rebuild the Kolkata He Never Stopped Loving</p>
         </div>
 
