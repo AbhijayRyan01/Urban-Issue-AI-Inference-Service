@@ -32,6 +32,10 @@ router.post(
         return res.status(400).json({ error: "Image & description required" });
       }
 
+      if (!lat || !lng) {
+        return res.status(400).json({ error: "Location required" });
+      }
+
       // Send image to ML service
       const formData = new FormData();
       formData.append("file", fs.createReadStream(req.file.path));
@@ -50,7 +54,10 @@ router.post(
         description,
         imagePath: req.file.path,
         status: "Reported",
-        location: lat && lng ? { lat, lng } : undefined
+        location: {
+          lat: parseFloat(lat),
+          lng: parseFloat(lng)
+        }
       });
 
       // Save prediction
@@ -62,11 +69,11 @@ router.post(
         priority: mlRes.data.priority
       });
 
-      // Link prediction to issue
       issue.prediction = prediction._id;
       await issue.save();
 
       res.status(201).json({ issue, prediction });
+
     } catch (err) {
       console.error("REPORT ISSUE ERROR:", err);
       res.status(500).json({ error: "Issue creation failed" });
@@ -75,7 +82,7 @@ router.post(
 );
 
 // ================================
-// GET /api/issues/my  (Citizen)
+// GET /api/issues/my
 // ================================
 router.get("/my", auth, async (req, res) => {
   const issues = await Issue.find({ userId: req.user.id })
@@ -86,7 +93,7 @@ router.get("/my", auth, async (req, res) => {
 });
 
 // ================================
-// GET /api/issues  (Admin)
+// GET /api/issues (Admin)
 // ================================
 router.get("/", auth, async (req, res) => {
   try {
@@ -95,7 +102,7 @@ router.get("/", auth, async (req, res) => {
     }
 
     const issues = await Issue.find()
-      .populate("prediction") // 🔥 THIS FIXES YOUR PROBLEM
+      .populate("prediction")
       .sort({ createdAt: -1 });
 
     res.json(issues);
@@ -109,33 +116,17 @@ router.get("/", auth, async (req, res) => {
 // PATCH /api/issues/issue-status/:id
 // ================================
 router.patch("/issue-status/:id", auth, async (req, res) => {
-  const issue = await Issue.findById(req.params.id);
-  if (!issue) return res.status(404).json({ msg: "Issue not found" });
-
-  issue.status = req.body.status;
-  await issue.save();
-
-  res.json(issue);
-});
-
-// ================================
-// PATCH /api/issues/issue-status/:id (Admin Only)
-// ================================
-router.patch("/issue-status/:id", auth, async (req, res) => {
   try {
-    if (!req.user || req.user.role !== "admin") {
+    if (req.user.role !== "admin") {
       return res.status(403).json({ msg: "Admin access only" });
     }
 
     const issue = await Issue.findById(req.params.id);
-    if (!issue) {
-      return res.status(404).json({ msg: "Issue not found" });
-    }
+    if (!issue) return res.status(404).json({ msg: "Issue not found" });
 
     const newStatus = req.body.status;
     issue.status = newStatus;
 
-    // 🔥 RESOLUTION LOGIC
     if (newStatus === "Resolved") {
       issue.resolvedAt = new Date();
     } else {
@@ -145,11 +136,11 @@ router.patch("/issue-status/:id", auth, async (req, res) => {
     await issue.save();
 
     res.json(issue);
+
   } catch (err) {
     console.error("STATUS UPDATE ERROR:", err);
     res.status(500).json({ error: "Failed to update status" });
   }
 });
-
 
 module.exports = router;

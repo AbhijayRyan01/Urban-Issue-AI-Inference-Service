@@ -24,6 +24,14 @@ function AdminDashboard() {
   const [loadingIssues, setLoadingIssues] = useState(true);
   const token = localStorage.getItem("token");
 
+  // =========================
+  // LOGOUT HANDLER
+  // =========================
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
+
   const fetchIssues = async () => {
     try {
       setLoadingIssues(true);
@@ -61,7 +69,6 @@ function AdminDashboard() {
           },
         }
       );
-      // Refresh issues and summary cards; chart is derived from issues
       fetchIssues();
       fetchAnalytics();
     } catch (err) {
@@ -84,7 +91,7 @@ function AdminDashboard() {
       if (isNaN(date)) return;
 
       const year = date.getFullYear();
-      const month = date.getMonth() + 1; // 1-12
+      const month = date.getMonth() + 1;
       const key = `${year}-${month}`;
 
       if (!map.has(key)) {
@@ -146,8 +153,45 @@ function AdminDashboard() {
 
   return (
     <div className="dashboard-container">
-      <h2 className="dashboard-title">Admin Dashboard</h2>
-      <p className="welcome-message">Welcome, Admin 👋</p>
+
+      {/* ── Top Bar with Logout ── */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: "8px",
+      }}>
+        <div>
+          <h2 className="dashboard-title" style={{ margin: 0 }}>Admin Dashboard</h2>
+          <p className="welcome-message" style={{ margin: "4px 0 0" }}>Welcome, Admin 👋</p>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          style={{
+            background: "linear-gradient(135deg, #ec5b13, #ff7a00)",
+            border: "none",
+            color: "#fff",
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: "pointer",
+            padding: "8px 18px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 10px rgba(236, 91, 19, 0.3)",
+            transition: "all 0.2s ease-in-out",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = "translateY(-2px)";
+            e.target.style.boxShadow = "0 6px 14px rgba(236, 91, 19, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0)";
+            e.target.style.boxShadow = "0 4px 10px rgba(236, 91, 19, 0.3)";
+          }}
+        >
+          Logout
+        </button>
+      </div>
 
       {analytics && (
         <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
