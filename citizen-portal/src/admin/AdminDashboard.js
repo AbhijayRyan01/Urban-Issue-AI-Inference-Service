@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
 import { Bar } from "react-chartjs-2";
 import {
@@ -18,10 +18,33 @@ import "./AdminDashboard.css";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+const MONTHS = [
+  { value: "", label: "All Months" },
+  { value: 1,  label: "January" },
+  { value: 2,  label: "February" },
+  { value: 3,  label: "March" },
+  { value: 4,  label: "April" },
+  { value: 5,  label: "May" },
+  { value: 6,  label: "June" },
+  { value: 7,  label: "July" },
+  { value: 8,  label: "August" },
+  { value: 9,  label: "September" },
+  { value: 10, label: "October" },
+  { value: 11, label: "November" },
+  { value: 12, label: "December" },
+];
+
 function AdminDashboard() {
   const [issues, setIssues] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loadingIssues, setLoadingIssues] = useState(true);
+
+  // ── Filter state ──
+  const [filterMonth,    setFilterMonth]    = useState("");
+  const [filterYear,     setFilterYear]     = useState("");
+  const [filterStatus,   setFilterStatus]   = useState("");
+  const [filterPriority, setFilterPriority] = useState("");
+
   const token = localStorage.getItem("token");
 
   // =========================
@@ -32,7 +55,7 @@ function AdminDashboard() {
     window.location.href = "/login";
   };
 
-  const fetchIssues = async () => {
+  const fetchIssues = useCallback(async () => {
     try {
       setLoadingIssues(true);
       const res = await axios.get("http://localhost:5000/api/issues", {
@@ -44,7 +67,7 @@ function AdminDashboard() {
     } finally {
       setLoadingIssues(false);
     }
-  };
+  }, [token]);
 
   const fetchAnalytics = async () => {
     try {
@@ -63,11 +86,7 @@ function AdminDashboard() {
       await axios.patch(
         `http://localhost:5000/api/issues/issue-status/${id}`,
         { status: newStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchIssues();
       fetchAnalytics();
@@ -81,41 +100,55 @@ function AdminDashboard() {
     fetchAnalytics();
   }, []);
 
+  // ── Derive available years from issues list ──
+  const availableYears = useMemo(() => {
+    const years = new Set(
+      issues
+        .filter((i) => i.createdAt && !isNaN(new Date(i.createdAt)))
+        .map((i) => new Date(i.createdAt).getFullYear())
+    );
+    return Array.from(years).sort((a, b) => a - b);
+  }, [issues]);
+
+  // ── Apply all filters to issues ──
+  const filteredIssues = useMemo(() => {
+    return issues.filter((issue) => {
+      if (!issue.createdAt) return false;
+      const date = new Date(issue.createdAt);
+      if (isNaN(date)) return false;
+
+      const monthMatch    = filterMonth    === "" || date.getMonth() + 1 === Number(filterMonth);
+      const yearMatch     = filterYear     === "" || date.getFullYear()  === Number(filterYear);
+      const statusMatch   = filterStatus   === "" || issue.status   === filterStatus;
+      const priorityMatch = filterPriority === "" || issue.priority === filterPriority;
+      return monthMatch && yearMatch && statusMatch && priorityMatch;
+    });
+  }, [issues, filterMonth, filterYear, filterStatus, filterPriority]);
+
   const monthlySummary = useMemo(() => {
     const map = new Map();
 
     issues.forEach((issue) => {
       if (!issue.createdAt) return;
-
       const date = new Date(issue.createdAt);
       if (isNaN(date)) return;
 
-      const year = date.getFullYear();
+      const year  = date.getFullYear();
       const month = date.getMonth() + 1;
-      const key = `${year}-${month}`;
+      const key   = `${year}-${month}`;
 
       if (!map.has(key)) {
-        map.set(key, {
-          _id: { year, month },
-          reportedCount: 0,
-          inProgressCount: 0,
-          resolvedCount: 0,
-        });
+        map.set(key, { _id: { year, month }, reportedCount: 0, inProgressCount: 0, resolvedCount: 0 });
       }
 
       const bucket = map.get(key);
       bucket.reportedCount += 1;
-
-      if (issue.status === "In Progress") {
-        bucket.inProgressCount += 1;
-      } else if (issue.status === "Resolved") {
-        bucket.resolvedCount += 1;
-      }
+      if (issue.status === "In Progress") bucket.inProgressCount += 1;
+      else if (issue.status === "Resolved") bucket.resolvedCount += 1;
     });
 
     return Array.from(map.values()).sort(
-      (a, b) =>
-        a._id.year - b._id.year || a._id.month - b._id.month
+      (a, b) => a._id.year - b._id.year || a._id.month - b._id.month
     );
   }, [issues]);
 
@@ -128,10 +161,19 @@ function AdminDashboard() {
     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
   };
 
+  const selectStyle = {
+    padding: "7px 12px",
+    borderRadius: "8px",
+    border: "1px solid #ddd",
+    fontSize: 14,
+    cursor: "pointer",
+    background: "#fff",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+    outline: "none",
+  };
+
   const chartData = {
-    labels: monthlySummary.map(
-      (item) => `${item._id.month}/${item._id.year}`
-    ),
+    labels: monthlySummary.map((item) => `${item._id.month}/${item._id.year}`),
     datasets: [
       {
         label: "Issues Reported",
@@ -154,7 +196,7 @@ function AdminDashboard() {
   return (
     <div className="dashboard-container">
 
-      {/* ── Top Bar with Logout (styled like IssueForm header) ── */}
+      {/* ── Top Bar ── */}
       <div
         style={{
           display: "flex",
@@ -172,19 +214,28 @@ function AdminDashboard() {
           </p>
         </div>
 
-        {/* Logout button – mimic IssueForm.js styles.logoutBtn */}
         <button
           onClick={handleLogout}
           style={{
-            background: "none",
+            background: "linear-gradient(135deg, #ec5b13, #ff7a00)",
             border: "none",
-            color: "#64748b",
+            color: "#fff",
             fontSize: 14,
-            fontWeight: 500,
+            fontWeight: 600,
             cursor: "pointer",
-            padding: 0,
+            padding: "8px 18px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 10px rgba(236, 91, 19, 0.3)",
+            transition: "all 0.2s ease-in-out",
           }}
-          className="nav-link"
+          onMouseEnter={(e) => {
+            e.target.style.transform = "translateY(-2px)";
+            e.target.style.boxShadow = "0 6px 14px rgba(236, 91, 19, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = "translateY(0)";
+            e.target.style.boxShadow = "0 4px 10px rgba(236, 91, 19, 0.3)";
+          }}
         >
           Logout
         </button>
@@ -216,10 +267,7 @@ function AdminDashboard() {
         <div className="chart-wrapper">
           <Bar
             data={chartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-            }}
+            options={{ responsive: true, maintainAspectRatio: false }}
           />
         </div>
       </div>
@@ -235,19 +283,80 @@ function AdminDashboard() {
         </div>
       </div>
 
+      {/* ── Issues Table with Month / Year / Status / Priority filters ── */}
       <div className="table-section">
-        <h3>Issues Table</h3>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", marginBottom: "12px" }}>
+          {/* Left: title + count */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <h3 style={{ margin: 0 }}>Issues Table</h3>
+            <span style={{ color: "#888", fontSize: 13 }}>
+              Showing {filteredIssues.length} of {issues.length} issues
+            </span>
+          </div>
+
+          {/* Right: all four filters + clear button */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {/* Month */}
+            <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={selectStyle}>
+              {MONTHS.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+
+            {/* Year */}
+            <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={selectStyle}>
+              <option value="">All Years</option>
+              {availableYears.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+
+            {/* Status */}
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={selectStyle}>
+              <option value="">All Statuses</option>
+              <option value="Reported">Reported</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+
+            {/* Priority */}
+            <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} style={selectStyle}>
+              <option value="">All Priorities</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+
+            {/* Clear — only visible when any filter is active */}
+            {(filterMonth !== "" || filterYear !== "" || filterStatus !== "" || filterPriority !== "") && (
+              <button
+                onClick={() => { setFilterMonth(""); setFilterYear(""); setFilterStatus(""); setFilterPriority(""); }}
+                style={{ ...selectStyle, background: "#f0f0f0", color: "#555", border: "1px solid #ccc", fontWeight: 500 }}
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        </div>
+
         <IssuesTable
-          issues={issues}
+          issues={filteredIssues}
           loading={loadingIssues}
           onStatusChange={updateIssueStatus}
         />
       </div>
 
+      {/* ── Resolved Issues Table with same filters ── */}
       <div className="table-section" style={{ marginTop: "20px" }}>
-        <h3>Resolved Issues Table</h3>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
+          <h3 style={{ margin: 0 }}>Resolved Issues Table</h3>
+          <span style={{ color: "#888", fontSize: 13 }}>
+            (uses same filters above)
+          </span>
+        </div>
+
         <ResolvedIssuesTable
-          issues={issues}
+          issues={filteredIssues}
           loading={loadingIssues}
           onStatusChange={updateIssueStatus}
         />

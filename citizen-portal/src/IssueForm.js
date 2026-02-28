@@ -285,7 +285,7 @@ function IssueForm() {
   const [lng, setLng] = useState(null);
   const [locationFreq, setLocationFreq] = useState(null);
   const [category, setCategory] = useState("");
-  const [priority, setPriority] = useState("High");
+  //const [priority, setPriority] = useState("High");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
