@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
 import symbol from "./assets/symbol.jpg";   // adjust path if needed
+import "./IssueForm.css"; // Responsive styles
 // ─── Inline Styles ────────────────────────────────────────────────────────────
 const styles = {
   root: {
@@ -14,9 +15,10 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "12px 80px",
+    padding: "12px clamp(16px, 5vw, 80px)",
     background: "#fff",
     borderBottom: "1px solid #e2e8f0",
+    flexWrap: "wrap",
   },
   headerBrand: { display: "flex", alignItems: "center", gap: 10 },
   headerLogo: {
@@ -26,16 +28,16 @@ const styles = {
     display: "flex", alignItems: "center", justifyContent: "center",
     color: "#fff", fontSize: 20,
   },
-  headerTitle: { fontSize: 20, fontWeight: 800, color: "#0f172a", margin: 0 },
-  headerNav: { display: "flex", alignItems: "center", gap: 24 },
+  headerTitle: { fontSize: "clamp(16px, 4vw, 20px)", fontWeight: 800, color: "#0f172a", margin: 0 },
+  headerNav: { display: "flex", alignItems: "center", gap: "clamp(12px, 2vw, 24px)" },
   navLink: {
-    color: "#64748b", fontSize: 14, fontWeight: 500,
+    color: "#64748b", fontSize: "clamp(12px, 2vw, 14px)", fontWeight: 500,
     textDecoration: "none", cursor: "pointer",
     transition: "color 0.2s",
   },
   logoutBtn: {
     background: "none", border: "none",
-    color: "#64748b", fontSize: 14, fontWeight: 500,
+    color: "#64748b", fontSize: "clamp(12px, 2vw, 14px)", fontWeight: 500,
     cursor: "pointer", padding: 0,
   },
   avatar: {
@@ -50,13 +52,13 @@ const styles = {
     objectFit: "contain"
   },
   // Main
-  main: { maxWidth: 1280, margin: "0 auto", padding: "32px 80px" },
-  hero: { marginBottom: 32 },
+  main: { maxWidth: 1280, margin: "0 auto", padding: "clamp(16px, 5vw, 32px) clamp(16px, 5vw, 80px)" },
+  hero: { marginBottom: "clamp(16px, 5vw, 32px)" },
   heroTitle: {
-    fontSize: 36, fontWeight: 900, color: "#0f172a",
+    fontSize: "clamp(24px, 7vw, 36px)", fontWeight: 900, color: "#0f172a",
     letterSpacing: "-0.5px", margin: "0 0 8px",
   },
-  heroSub: { fontSize: 18, color: "#64748b", margin: 0 },
+  heroSub: { fontSize: "clamp(14px, 4vw, 18px)", color: "#64748b", margin: 0 },
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr",
@@ -68,13 +70,13 @@ const styles = {
     borderRadius: 12,
     border: "1px solid #e2e8f0",
     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-    padding: 24,
+    padding: "clamp(16px, 5vw, 24px)",
   },
   // Upload Zone
   uploadZone: {
     display: "flex", flexDirection: "column",
     alignItems: "center", justifyContent: "center",
-    width: "100%", height: 192,
+    width: "100%", height: "clamp(120px, 30vw, 192px)",
     border: "2px dashed #cbd5e1",
     borderRadius: 12,
     background: "#f8fafc",
@@ -87,9 +89,9 @@ const styles = {
     background: "rgba(236,91,19,0.04)",
     borderColor: "#ec5b13",
   },
-  uploadIcon: { fontSize: 40, color: "#94a3b8", marginBottom: 8 },
-  uploadLabel: { fontSize: 14, color: "#64748b" },
-  uploadSub: { fontSize: 12, color: "#94a3b8", marginTop: 4 },
+  uploadIcon: { fontSize: "clamp(28px, 8vw, 40px)", color: "#94a3b8", marginBottom: 8 },
+  uploadLabel: { fontSize: "clamp(12px, 3vw, 14px)", color: "#64748b" },
+  uploadSub: { fontSize: "clamp(10px, 2vw, 12px)", color: "#94a3b8", marginTop: 4 },
   uploadPreview: {
     width: "100%", height: "100%",
     objectFit: "cover", position: "absolute", inset: 0,
@@ -382,8 +384,9 @@ function IssueForm() {
   <h2 style={styles.headerTitle}>BiswaBangla</h2>
 </div>
         <div style={styles.headerNav}>
-          <a href="#" className="nav-link" style={styles.navLink}>Home</a>
-          <a href="#" className="nav-link" style={styles.navLink}>My Reports</a>
+          {/* use buttons instead of empty anchors for accessibility */}
+          <button type="button" className="nav-link" style={styles.navLink}>Home</button>
+          <button type="button" className="nav-link" style={styles.navLink}>My Reports</button>
           <button onClick={handleLogout} style={styles.logoutBtn} className="nav-link">
             Logout
           </button>
@@ -439,11 +442,12 @@ function IssueForm() {
                 </div>
 
                 {/* Category + Priority */}
-                <div style={styles.fieldGrid}>
+                <div style={styles.fieldGrid} className="issue-form-field-grid">
                   <div style={styles.fieldGroup}>
-                    <label style={styles.label}>Category</label>
+                    <label style={styles.label} className="issue-form-label">Category</label>
                     <select
                       style={styles.select}
+                      className="issue-form-select"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                     >

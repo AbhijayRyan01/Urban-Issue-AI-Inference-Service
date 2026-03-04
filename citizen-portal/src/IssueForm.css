@@ -1,0 +1,125 @@
+/* IssueForm Responsive Styles */
+
+/* Mobile Devices (320px - 480px) */
+@media (max-width: 480px) {
+  .issue-form-field-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .issue-form-label {
+    font-size: 13px !important;
+  }
+  
+  .issue-form-select,
+  .issue-form-input {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .issue-form-priority-group {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .issue-form-priority-btn {
+    flex: 1 1 calc(33.33% - 6px) !important;
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
+  
+  .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .footer-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* Tablet Devices (481px - 1024px) */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .issue-form-field-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+  }
+  
+  .issue-form-label {
+    font-size: 13px !important;
+  }
+  
+  .issue-form-select,
+  .issue-form-input {
+    font-size: 13px !important;
+    padding: 9px 13px !important;
+  }
+  
+  .issue-form-priority-group {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .issue-form-priority-btn {
+    flex: 1 !important;
+    font-size: 12px !important;
+  }
+  
+  .footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+/* Desktop Devices (1025px and above) */
+@media (min-width: 1025px) {
+  .issue-form-field-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+  
+  .issue-form-label {
+    font-size: 14px !important;
+  }
+  
+  .issue-form-select,
+  .issue-form-input {
+    font-size: 14px !important;
+    padding: 10px 14px !important;
+  }
+  
+  .issue-form-priority-btn {
+    font-size: 14px !important;
+  }
+}
+
+/* Responsive typography classes */
+.issue-form-responsive-text-lg {
+  font-size: clamp(20px, 6vw, 36px);
+}
+
+.issue-form-responsive-text-md {
+  font-size: clamp(14px, 4vw, 18px);
+}
+
+.issue-form-responsive-text-sm {
+  font-size: clamp(12px, 3vw, 14px);
+}
+
+/* General responsive adjustments */
+@media (max-width: 480px) {
+  .hero-section {
+    margin-bottom: 16px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 1024px) {
+  .hero-section {
+    margin-bottom: 24px;
+  }
+}
+
